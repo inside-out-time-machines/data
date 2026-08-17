@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jottem Open Data</title>
+<meta name="description" content="Alle open-data-uitgangen van het Jottem-platform: datasets per project, IIIF, W3C Web Annotations, RDF/SPARQL, RSS en de publieke API.">
+<link rel="icon" href="/favicon.ico">
+<link rel="stylesheet" href="assets/swagger-ui/swagger-ui.css">
+<style>
+/* Jottem-huisstijl (zie brand.iotm.nl); fonts lokaal gehost */
+@font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/fraunces-v38-latin-regular.woff2') format('woff2'); }
+@font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 600; font-display: swap; src: url('assets/fonts/fraunces-v38-latin-600.woff2') format('woff2'); }
+@font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/fraunces-v38-latin-700.woff2') format('woff2'); }
+@font-face { font-family: 'Albert Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/albert-sans-v4-latin-regular.woff2') format('woff2'); }
+@font-face { font-family: 'Albert Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('assets/fonts/albert-sans-v4-latin-600.woff2') format('woff2'); }
+
+:root {
+  accent-color: #a2401f;
+  --oranje: #d85a30;
+  --roest: #a2401f;
+  --inkt: #1f1e1c;
+  --grijs: #6b625c;
+  --papier: #faf6f1;
+  --karton: #e8d9c4;
+  --kartonrand: #d3bfa3;
+  --wit: #ffffff;
+  --kop: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --body: 'Albert Sans', 'Segoe UI', system-ui, Helvetica, Arial, sans-serif;
+  --schaduw: 0 3px 10px rgba(31, 30, 28, .14);
+  --max: 68rem;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--body); font-size: 1.0625rem; line-height: 1.6; color: var(--inkt); background: var(--papier); }
+a { color: var(--roest); text-decoration-color: var(--oranje); text-underline-offset: 2px; }
+a:hover { color: var(--oranje); }
+:focus-visible { outline: 3px solid var(--oranje); outline-offset: 2px; border-radius: 2px; }
+
+.topbar { background: var(--inkt); color: var(--wit); }
+.topbar-binnen { max-width: var(--max); margin: 0 auto; padding: .7rem 1.2rem; display: flex; align-items: center; gap: .6rem; }
+.topbar img { height: 1.8rem; }
+.topbar a { color: var(--wit); text-decoration: none; font-family: var(--kop); font-weight: 600; font-size: 1.25rem; }
+.topbar .sub { color: var(--karton); font-size: .95rem; margin-left: .3rem; }
+.topbar nav { margin-left: auto; display: flex; gap: 1.1rem; }
+.topbar nav a { font-family: var(--body); font-weight: 400; font-size: .95rem; }
+
+main { max-width: var(--max); margin: 0 auto; padding: 2rem 1.2rem 4rem; }
+h1 { font-family: var(--kop); font-weight: 700; font-size: 2.1rem; color: var(--roest); margin-bottom: .4rem; text-wrap: balance; }
+h2 { font-family: var(--kop); font-weight: 600; font-size: 1.5rem; color: var(--roest); margin: 2.6rem 0 .8rem; }
+h3 { font-family: var(--kop); font-weight: 600; font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: .5rem; }
+h3 img { height: 1.2rem; width: 1.2rem; object-fit: contain; }
+.intro { max-width: 46rem; color: var(--grijs); }
+
+.platformlinks { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; font-size: .95rem; }
+.kaart { background: var(--wit); border: 1px solid var(--kartonrand); border-radius: .5rem; box-shadow: var(--schaduw); padding: 1.1rem 1.3rem; margin-top: 1.1rem; }
+.project { border-top: 1px dashed var(--kartonrand); margin-top: .9rem; padding-top: .9rem; }
+.project-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .8rem; }
+.project-kop a { font-weight: 600; }
+.tellers { color: var(--grijs); font-size: .92rem; }
+.links { margin-top: .4rem; display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; font-size: .92rem; }
+.links a { white-space: nowrap; }
+.status { color: var(--grijs); font-style: italic; }
+
+.repos { list-style: none; margin-top: .6rem; }
+.repos li { padding: .3rem 0; }
+.repos code { font-size: .95em; background: var(--karton); border-radius: .25rem; padding: .05rem .4rem; }
+
+#swagger { background: var(--wit); border: 1px solid var(--kartonrand); border-radius: .5rem; box-shadow: var(--schaduw); margin-top: 1.1rem; padding: .5rem; }
+/* Swagger UI iets naar de huisstijl buigen */
+#swagger .swagger-ui .topbar { display: none; }
+#swagger .swagger-ui .info .title, #swagger .swagger-ui .opblock-tag { font-family: var(--kop); }
+
+footer { background: var(--inkt); color: var(--karton); }
+footer .binnen { max-width: var(--max); margin: 0 auto; padding: 1.2rem; font-size: .92rem; }
+footer a { color: var(--wit); }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-binnen">
+    <img src="assets/logo/jottem-o-wit.svg" alt="">
+    <a href="https://dev.iotm.nl/">jottem</a>
+    <span class="sub">open data</span>
+    <nav>
+      <a href="#datasets">Datasets</a>
+      <a href="#api">API</a>
+      <a href="#broncode">Broncode</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <h1>Jottem Open Data</h1>
+  <p class="intro">
+    Alles wat op het <a href="https://dev.iotm.nl/">Jottem-platform</a> wordt gepubliceerd is
+    open data: per project een dataset (schema.org AP NDE) met RDF-dump en SPARQL-endpoint,
+    IIIF Presentation-manifests en -collections, een Change Discovery activity-stream,
+    W3C Web Annotations en RSS-feeds. Deze pagina bundelt alle uitgangen.
+  </p>
+  <div class="platformlinks" id="platformlinks"></div>
+
+  <h2 id="datasets">Datasets per organisatie en project</h2>
+  <div id="organisaties"><p class="status">Organisaties worden geladen&hellip;</p></div>
+
+  <h2 id="api">Publieke API</h2>
+  <p class="intro">
+    De publieke lees-API (zonder authenticatie) achter deze uitgangen. De volledige
+    specificatie staat in de <a href="https://design.iotm.nl/openapi.yaml">openapi.yaml</a>
+    van het <a href="https://design.iotm.nl/">ontwerp</a>; endpoints gemarkeerd met
+    &ldquo;nog niet gerealiseerd&rdquo; zijn gepland.
+  </p>
+  <div id="swagger"></div>
+
+  <h2 id="broncode">Broncode</h2>
+  <p class="intro">Jottem is open source; alle repo&rsquo;s staan op GitHub onder
+    <a href="https://github.com/inside-out-time-machines">inside-out-time-machines</a>.</p>
+  <ul class="repos">
+    <li><code>jottem</code> &mdash; <a href="https://github.com/inside-out-time-machines/jottem">github.com/inside-out-time-machines/jottem</a> &mdash; het platform: backend-API (FastAPI), frontend (Next.js) en deployment</li>
+    <li><code>design</code> &mdash; <a href="https://github.com/inside-out-time-machines/design">github.com/inside-out-time-machines/design</a> &mdash; het ontwerp: requirements, architectuur, API-specificaties (gepubliceerd op <a href="https://design.iotm.nl/">design.iotm.nl</a>)</li>
+    <li><code>data</code> &mdash; <a href="https://github.com/inside-out-time-machines/data">github.com/inside-out-time-machines/data</a> &mdash; deze open-data-pagina</li>
+    <li><code>brand</code> &mdash; <a href="https://github.com/inside-out-time-machines/brand">github.com/inside-out-time-machines/brand</a> &mdash; de merkgids (gepubliceerd op <a href="https://brand.iotm.nl/">brand.iotm.nl</a>)</li>
+    <li><code>website</code> &mdash; <a href="https://github.com/inside-out-time-machines/website">github.com/inside-out-time-machines/website</a> &mdash; de IOTM-website (<a href="https://www.iotm.nl/">www.iotm.nl</a>)</li>
+  </ul>
+</main>
+<footer>
+  <div class="binnen">
+    <strong>Jottem</strong> is een initiatief van <a href="https://www.iotm.nl/">Inside Out Time Machines</a>.
+    Dit is de ontwikkelomgeving van de MVP. <a href="https://design.iotm.nl/">Ontwerp</a> &middot;
+    <a href="https://brand.iotm.nl/">Merkgids</a>
+  </div>
+</footer>
+
+<script src="assets/swagger-ui/swagger-ui-bundle.js"></script>
+<script>
+// Omgeving: in deze fase de dev-omgeving; bij livegang worden dit www/api/data.iotm.nl.
+const SITE = "https://dev.iotm.nl";
+const API  = "https://api.dev.iotm.nl";
+const DATA = "https://data.dev.iotm.nl";
+const REGISTER = "https://datasetregister.netwerkdigitaalerfgoed.nl/dataset?uri=";
+
+// bekende licenties -> korte naam
+function licentieNaam(url) {
+  if (!url) return null;
+  const m = url.match(/creativecommons\.org\/(licenses\/([a-z-]+)|publicdomain\/zero)\/(\d\.\d)/);
+  if (!m) return url.replace(/^https?:\/\//, "");
+  return m[1].startsWith("publicdomain") ? "CC0 " + m[3] : "CC " + m[2].toUpperCase() + " " + m[3];
+}
+
+const el = (tag, cls, html) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html !== undefined) n.innerHTML = html;
+  return n;
+};
+const a = (href, tekst) => `<a href="${href}">${tekst}</a>`;
+
+// platformbrede uitgangen
+document.getElementById("platformlinks").innerHTML = [
+  a(`${DATA}/datacatalog`, "Datacatalogus (schema.org)"),
+  a(`${DATA}/sparql`, "SPARQL-endpoint"),
+  a(`${API}/rss`, "RSS platform"),
+].join(" ");
+
+fetch(`${API}/organisaties`)
+  .then(r => r.json())
+  .then(organisaties => {
+    const houder = document.getElementById("organisaties");
+    houder.innerHTML = "";
+    for (const org of organisaties) {
+      const kaart = el("div", "kaart");
+      const favicon = org.faviconUrl ? `<img src="${org.faviconUrl}" alt="">` : "";
+      kaart.appendChild(el("h3", null,
+        `${favicon}${org.website ? a(org.website, org.naam) : org.naam}`));
+      for (const p of org.projecten) {
+        const blok = el("div", "project");
+        const kop = el("div", "project-kop");
+        kop.innerHTML =
+          a(`${SITE}/organisatie/${org.slug}/${p.slug}`, p.naam) +
+          `<span class="tellers">${p.aantalJottems} jottems &middot; ` +
+          `${p.aantalAnnotaties} annotaties` +
+          (p.datasetLicentie ? ` &middot; licentie ${a(p.datasetLicentie, licentieNaam(p.datasetLicentie))}` : "") +
+          `</span>`;
+        blok.appendChild(kop);
+        const datasetUri = `${DATA}/project/${p.projectId}/dataset`;
+        blok.appendChild(el("div", "links", [
+          a(datasetUri, "datasetbeschrijving"),
+          a(REGISTER + encodeURIComponent(datasetUri), "NDE Datasetregister"),
+          a(`${DATA}/project/${p.projectId}/dump-${p.slug}.nt.gz`, "datadump (N-Triples)"),
+          a(`${API}/project/${p.projectId}/iiif/collection`, "IIIF-collectie"),
+          a(`${API}/project/${p.projectId}/activity-stream`, "activity-stream (Change Discovery)"),
+          a(`${API}/project/${p.projectId}/annotations`, "annotaties (W3C)"),
+          a(`${API}/project/${p.projectId}/rss`, "RSS"),
+        ].join(" ")));
+        kaart.appendChild(blok);
+      }
+      houder.appendChild(kaart);
+    }
+  })
+  .catch(() => {
+    document.getElementById("organisaties").innerHTML =
+      '<p class="status">De API is op dit moment niet bereikbaar.</p>';
+  });
+
+SwaggerUIBundle({
+  url: "https://design.iotm.nl/openapi.yaml",
+  domNode: document.getElementById("swagger"),
+  presets: [SwaggerUIBundle.presets.apis],
+  docExpansion: "list",
+  defaultModelsExpandDepth: -1,
+  tryItOutEnabled: false,
+});
+</script>
+</body>
+</html>
