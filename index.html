@@ -70,6 +70,39 @@ h3 img { height: 1.2rem; width: 1.2rem; object-fit: contain; }
 .links a { white-space: nowrap; }
 .status { color: var(--grijs); font-style: italic; }
 
+/* licentie: korte naam als link, met een (i) voor de uitleg - zie de merkgids */
+.lic-i {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.25em; height: 1.25em; margin-left: .5em;
+  border: 1px solid var(--oranje); border-radius: 50%;
+  background: transparent; color: var(--roest);
+  font-family: var(--kop); font-style: italic; font-weight: 700;
+  font-size: .95em; line-height: 1; cursor: pointer; padding: 0;
+}
+.lic-i[hidden] { display: none; }   /* inline-flex zou het hidden-attribuut overrulen */
+.lic-i:hover { background: var(--oranje); color: var(--wit); }
+dialog.dialoog {
+  margin: auto;   /* expliciet: de reset zet de native centrering anders uit */
+  border: 1px solid var(--kartonrand); border-top: 4px solid var(--oranje);
+  border-radius: .45rem; box-shadow: 0 10px 40px rgba(31, 30, 28, .3);
+  padding: 1.5rem 1.7rem; max-width: 28rem; width: calc(100% - 2rem);
+  background: var(--wit); color: var(--inkt); font-family: var(--body);
+  font-size: 1rem; line-height: 1.6;
+}
+dialog.dialoog::backdrop { background: rgba(31, 30, 28, .55); }
+dialog.dialoog h2 { font-family: var(--kop); font-size: 1.3rem; margin: 0 0 .8rem; line-height: 1.2; }
+.dialoog-knoppen { margin-top: 1.1rem; }
+.dialoog-knoppen button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  background: var(--oranje); color: var(--wit); border: 2px solid transparent;
+  padding: .55rem 1.2rem; border-radius: .4rem;
+}
+.dialoog-knoppen button:hover { background: #c04e28; }
+@media (max-width: 640px) {
+  dialog.dialoog { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh;
+    margin: 0; border-radius: 0; border-left: none; border-right: none; overflow-y: auto; }
+}
+
 .repos { list-style: none; margin-top: .6rem; }
 .repos li { padding: .3rem 0; }
 .repos code { font-size: .95em; background: var(--karton); border-radius: .25rem; padding: .05rem .4rem; }
@@ -146,12 +179,115 @@ const API  = "https://api.dev.iotm.nl";
 const DATA = "https://data.dev.iotm.nl";
 const REGISTER = "https://datasetregister.netwerkdigitaalerfgoed.nl/dataset?uri=";
 
-// bekende licenties -> korte naam
-function licentieNaam(url) {
+// Licenties: korte naam, uitleg op B1-niveau en de link naar de licentietekst.
+// Zie de merkgids (brand.iotm.nl, hoofdstuk Vormtaal, "Licenties tonen"): altijd de
+// korte naam, nooit een kale URL, de naam linkt naar de tekst en er staat een (i)
+// achter met de kern in gewone taal. De URI die het platform publiceert blijft
+// ongewijzigd; tekstUrl is alleen de pagina waar een mens de regels leest.
+const LICENTIES = {
+  "creativecommons.org/licenses/by/4.0": { naam: "CC BY 4.0",
+    tekstUrl: "https://creativecommons.org/licenses/by/4.0/deed.nl",
+    uitleg: "Iedereen mag dit bekijken, delen en hergebruiken. Ook in een boek, een krant of op een website. Er is \u00e9\u00e9n regel: de naam van de maker moet erbij staan." },
+  "creativecommons.org/licenses/by-sa/4.0": { naam: "CC BY-SA 4.0",
+    tekstUrl: "https://creativecommons.org/licenses/by-sa/4.0/deed.nl",
+    uitleg: "Iedereen mag dit delen en hergebruiken, als de naam van de maker erbij staat. Maakt iemand er iets nieuws mee? Dan moet dat onder dezelfde regels worden gedeeld." },
+  "creativecommons.org/licenses/by-nc/4.0": { naam: "CC BY-NC 4.0",
+    tekstUrl: "https://creativecommons.org/licenses/by-nc/4.0/deed.nl",
+    uitleg: "Iedereen mag dit delen en hergebruiken, maar niet om er geld mee te verdienen. De naam van de maker moet er altijd bij staan." },
+  "creativecommons.org/licenses/by-nd/4.0": { naam: "CC BY-ND 4.0",
+    tekstUrl: "https://creativecommons.org/licenses/by-nd/4.0/deed.nl",
+    uitleg: "Iedereen mag dit bekijken en delen, met de naam van de maker erbij. Aanpassen mag niet: wat je deelt, blijft zoals het is." },
+  "creativecommons.org/licenses/by-nc-sa/4.0": { naam: "CC BY-NC-SA 4.0",
+    tekstUrl: "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.nl",
+    uitleg: "Iedereen mag dit delen en er iets nieuws mee maken, maar niet om er geld mee te verdienen. De naam van de maker moet erbij, en het nieuwe werk moet onder dezelfde regels worden gedeeld." },
+  "creativecommons.org/licenses/by-nc-nd/4.0": { naam: "CC BY-NC-ND 4.0",
+    tekstUrl: "https://creativecommons.org/licenses/by-nc-nd/4.0/deed.nl",
+    uitleg: "Iedereen mag dit bekijken en delen, met de naam van de maker erbij. Aanpassen mag niet, en er geld mee verdienen ook niet." },
+  "creativecommons.org/publicdomain/zero/1.0": { naam: "CC0 1.0",
+    tekstUrl: "https://creativecommons.org/publicdomain/zero/1.0/deed.nl",
+    uitleg: "Dit is van iedereen. Iedereen mag er alles mee doen, ook zonder de naam van de maker erbij. Dat is de meest vrije keuze." },
+  "creativecommons.org/publicdomain/mark/1.0": { naam: "PDM 1.0",
+    tekstUrl: "https://creativecommons.org/publicdomain/mark/1.0/deed.nl",
+    uitleg: "Op dit materiaal rust geen auteursrecht meer. Iedereen mag er alles mee doen, ook zonder de naam van de maker erbij." },
+  "rightsstatements.org/vocab/inc/1.0": { naam: "InC 1.0",
+    tekstUrl: "https://rightsstatements.org/page/InC/1.0/?language=nl",
+    uitleg: "Op dit materiaal rust nog auteursrecht. Je mag het bekijken, maar wil je het ergens anders gebruiken? Vraag dan eerst toestemming aan de rechthebbende." },
+  "rightsstatements.org/vocab/inc-edu/1.0": { naam: "InC-EDU 1.0",
+    tekstUrl: "https://rightsstatements.org/page/InC-EDU/1.0/?language=nl",
+    uitleg: "Op dit materiaal rust nog auteursrecht. Je mag het bekijken en gebruiken voor onderwijs en onderzoek. Voor ander gebruik heb je toestemming nodig." },
+  "rightsstatements.org/vocab/noc-nc/1.0": { naam: "NoC-NC 1.0",
+    tekstUrl: "https://rightsstatements.org/page/NoC-NC/1.0/?language=nl",
+    uitleg: "Op dit materiaal rust geen auteursrecht meer. De organisatie die het bewaart vraagt je wel om er geen geld mee te verdienen." },
+  "rightsstatements.org/vocab/cne/1.0": { naam: "CNE 1.0",
+    tekstUrl: "https://rightsstatements.org/page/CNE/1.0/?language=nl",
+    uitleg: "Niemand heeft nog uitgezocht of er auteursrecht op dit materiaal rust. Wil je het gebruiken? Zoek dat dan eerst zelf uit, of vraag het aan de organisatie." },
+};
+
+// Dezelfde licentie wordt in verschillende vormen opgeslagen: het IIIF-manifest eist
+// http://, elders staat https://, RightsStatements heeft naast /vocab/ ook /page/, en
+// een deed- of legalcode-achtervoegsel wijst naar dezelfde licentie.
+function licentieSleutel(url) {
+  return url.trim().toLowerCase()
+    .replace(/^https?:\/\//, "").replace(/^www\./, "")
+    .split(/[?#]/)[0]
+    .replace("/page/", "/vocab/")
+    .replace(/\/(deed|legalcode)(\.[a-z-]+)?\/?$/, "")
+    .replace(/\/+$/, "");
+}
+
+const escape = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+// Korte naam als link naar de licentietekst, met de (i) ernaast. De knop staat hidden
+// in de HTML en wordt pas zichtbaar als de handler eraan hangt, zodat er zonder JS
+// geen dood knopje staat en de naam een gewone werkende link blijft.
+function licentieHtml(url) {
+  const info = licentieInfo(url);
+  if (!info) return "";
+  const vraag = info.bekend ? `Wat betekent ${info.naam}?` : "Wat betekent deze licentie?";
+  return `<a href="${escape(info.tekstUrl)}">${escape(info.naam)}</a>` +
+    `<button type="button" class="lic-i" hidden aria-label="${escape(vraag)}"` +
+    ` data-vraag="${escape(vraag)}" data-tekst="${escape(info.tekstUrl)}"` +
+    ` data-naam="${escape(info.bekend ? `de licentietekst (${info.naam})` : "de licentietekst")}"` +
+    ` data-uitleg="${escape(info.uitleg)}">i</button>`;
+}
+
+// Eén gedeelde dialoog die per klik gevuld wordt; hij wordt hier gemaakt, dus zonder
+// JS staat hij er niet.
+function licentieKnoppenActiveren(houder) {
+  const knoppen = houder.querySelectorAll(".lic-i[hidden]");
+  if (!knoppen.length) return;
+  let d = document.getElementById("licentie-dialoog");
+  if (!d) {
+    d = document.createElement("dialog");
+    d.id = "licentie-dialoog";
+    d.className = "dialoog";
+    d.innerHTML = '<h2></h2><p class="lic-uitleg"></p>' +
+      '<p style="margin-top:.8rem;font-size:.95rem">De volledige regels lees je in ' +
+      '<a class="lic-tekst" target="_blank" rel="noreferrer"></a>.</p>' +
+      '<div class="dialoog-knoppen"><button type="button" autofocus>Duidelijk</button></div>';
+    document.body.appendChild(d);
+    d.querySelector(".dialoog-knoppen button").addEventListener("click", () => d.close());
+  }
+  knoppen.forEach((knop) => {
+    knop.hidden = false;
+    knop.addEventListener("click", () => {
+      d.querySelector("h2").textContent = knop.dataset.vraag;
+      d.querySelector(".lic-uitleg").textContent = knop.dataset.uitleg;
+      const link = d.querySelector(".lic-tekst");
+      link.textContent = knop.dataset.naam;
+      link.href = knop.dataset.tekst;
+      d.showModal();
+    });
+  });
+}
+
+function licentieInfo(url) {
   if (!url) return null;
-  const m = url.match(/creativecommons\.org\/(licenses\/([a-z-]+)|publicdomain\/zero)\/(\d\.\d)/);
-  if (!m) return url.replace(/^https?:\/\//, "");
-  return m[1].startsWith("publicdomain") ? "CC0 " + m[3] : "CC " + m[2].toUpperCase() + " " + m[3];
+  const gevonden = LICENTIES[licentieSleutel(url)];
+  if (gevonden) return Object.assign({ bekend: true }, gevonden);
+  // nooit de URL als naam tonen; de link wijst dan naar de opgeslagen waarde zelf
+  return { bekend: false, naam: "Eigen licentie", tekstUrl: url,
+    uitleg: "Voor dit project geldt een eigen licentie. Lees de regels in de licentietekst hieronder." };
 }
 
 const el = (tag, cls, html) => {
@@ -186,7 +322,7 @@ fetch(`${API}/organisaties`)
           a(`${SITE}/organisatie/${org.slug}/${p.slug}`, p.naam) +
           `<span class="tellers">${p.aantalJottems} jottems &middot; ` +
           `${p.aantalAnnotaties} annotaties` +
-          (p.datasetLicentie ? ` &middot; licentie ${a(p.datasetLicentie, licentieNaam(p.datasetLicentie))}` : "") +
+          (p.datasetLicentie ? ` &middot; licentie ${licentieHtml(p.datasetLicentie)}` : "") +
           `</span>`;
         blok.appendChild(kop);
         const datasetUri = `${DATA}/project/${p.projectId}/dataset`;
@@ -203,6 +339,7 @@ fetch(`${API}/organisaties`)
       }
       houder.appendChild(kaart);
     }
+    licentieKnoppenActiveren(houder);
   })
   .catch(() => {
     document.getElementById("organisaties").innerHTML =
