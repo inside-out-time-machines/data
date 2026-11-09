@@ -10,6 +10,11 @@ broncoderepo's. De projectgegevens komen client-side uit de publieke API
 (`GET /organisaties`); de API-specificatie wordt geladen van
 [design.iotm.nl/openapi.yaml](https://design.iotm.nl/openapi.yaml).
 
+De hosts van site, API en data leidt de pagina af uit zijn eigen hostnaam
+(`data.dev.iotm.nl` geeft de dev-omgeving, `data.iotm.nl` productie), dus bij de livegang
+hoeft er niets te worden aangepast. In productie toont de pagina geen SPARQL-endpoint en
+geen Change Discovery: die staan tijdens de pilot uit.
+
 Statische site, geen buildstap. Swagger UI staat gevendored in
 `assets/swagger-ui/` (swagger-ui-dist 5.17.14, Apache-2.0); fonts en logo komen
 uit de [merkgids](https://github.com/inside-out-time-machines/brand).
