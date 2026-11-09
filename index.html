@@ -173,10 +173,16 @@ footer a { color: var(--wit); }
 
 <script src="assets/swagger-ui/swagger-ui-bundle.js"></script>
 <script>
-// Omgeving: in deze fase de dev-omgeving; bij livegang worden dit www/api/data.iotm.nl.
-const SITE = "https://dev.iotm.nl";
-const API  = "https://api.dev.iotm.nl";
-const DATA = "https://data.dev.iotm.nl";
+// Omgeving: afgeleid uit de eigen hostnaam, zodat dezelfde pagina op dev en productie
+// klopt. data.dev.iotm.nl -> dev.iotm.nl/api.dev.iotm.nl; data.iotm.nl -> www.iotm.nl/
+// api.iotm.nl. Lokaal geopend (file://) of op een onbekende host: de dev-omgeving.
+const BASIS = /^data\./.test(location.hostname)
+  ? location.hostname.replace(/^data\./, "")
+  : "dev.iotm.nl";
+const PRODUCTIE = BASIS === "iotm.nl";
+const SITE = PRODUCTIE ? "https://www.iotm.nl" : `https://${BASIS}`;
+const API  = `https://api.${BASIS}`;
+const DATA = `https://data.${BASIS}`;
 const REGISTER = "https://datasetregister.netwerkdigitaalerfgoed.nl/dataset?uri=";
 
 // Licenties: korte naam, uitleg op B1-niveau en de link naar de licentietekst.
@@ -297,13 +303,16 @@ const el = (tag, cls, html) => {
   return n;
 };
 const a = (href, tekst) => `<a href="${href}">${tekst}</a>`;
+// Change Discovery en het publieke SPARQL-endpoint staan tijdens de pilot in productie
+// uit (realisatieplan); daar tonen we die uitgangen dus niet
+const alleenBuitenProductie = (link) => PRODUCTIE ? null : link;
 
 // platformbrede uitgangen
 document.getElementById("platformlinks").innerHTML = [
   a(`${DATA}/datacatalog`, "Datacatalogus (schema.org)"),
-  a(`${DATA}/sparql`, "SPARQL-endpoint"),
+  alleenBuitenProductie(a(`${DATA}/sparql`, "SPARQL-endpoint")),
   a(`${API}/rss`, "RSS platform"),
-].join(" ");
+].filter(Boolean).join(" ");
 
 fetch(`${API}/organisaties`)
   .then(r => r.json())
@@ -331,10 +340,10 @@ fetch(`${API}/organisaties`)
           a(REGISTER + encodeURIComponent(datasetUri), "NDE Datasetregister"),
           a(`${DATA}/project/${p.projectId}/dump-${p.slug}.nt.gz`, "datadump (N-Triples)"),
           a(`${API}/project/${p.projectId}/iiif/collection`, "IIIF-collectie"),
-          a(`${API}/project/${p.projectId}/activity-stream`, "activity-stream (Change Discovery)"),
+          alleenBuitenProductie(a(`${API}/project/${p.projectId}/activity-stream`, "activity-stream (Change Discovery)")),
           a(`${API}/project/${p.projectId}/annotations`, "annotaties (W3C)"),
           a(`${API}/project/${p.projectId}/rss`, "RSS"),
-        ].join(" ")));
+        ].filter(Boolean).join(" ")));
         kaart.appendChild(blok);
       }
       houder.appendChild(kaart);
